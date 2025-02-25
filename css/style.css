@@ -1,0 +1,131 @@
+:root {
+    --sidebar-bg: #f8f9fa;
+    --sidebar-active: #e9ecef;
+    --text-color: #495057;
+    --primary-color: #0d6efd;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    
+    /* TailAdmin图表颜色 */
+    --chart-primary: #3C50E0;
+    --chart-secondary: #80CAEE;
+    --chart-tertiary: #FF9800;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-color);
+    background-color: #f5f5f5;
+}
+
+/* 自定义样式，补充Tailwind无法直接实现的效果 */
+
+/* 侧栏导航链接样式 */
+.nav-link {
+    @apply flex items-center gap-2 py-2 px-3 rounded-lg;
+    transition: all 0.2s ease;
+}
+
+.nav-link.active {
+    @apply bg-primary/10 text-primary font-medium;
+}
+
+.nav-link:hover:not(.active) {
+    @apply bg-base-200;
+}
+
+/* 区域显示/隐藏 */
+.section-hidden {
+    display: none;
+}
+
+.section-active {
+    display: block;
+}
+
+/* 实例状态标签 */
+.status-badge {
+    @apply badge text-xs font-medium;
+}
+
+.status-running {
+    @apply badge-success;
+}
+
+.status-stopped {
+    @apply badge-ghost;
+}
+
+.status-error {
+    @apply badge-error;
+}
+
+/* Toast通知 */
+.toast-notification {
+    @apply alert shadow-lg mb-2 animate-fadeIn;
+    animation-duration: 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+    animation-name: fadeIn;
+}
+
+/* TailAdmin图表样式覆盖 */
+.apexcharts-tooltip {
+    @apply rounded-lg shadow-lg border-0 !bg-base-100;
+}
+
+.apexcharts-tooltip-title {
+    @apply font-medium border-b border-base-300 !bg-transparent;
+}
+
+.apexcharts-legend-text {
+    @apply !text-base-content;
+}
+
+.apexcharts-text tspan {
+    @apply !text-base-content;
+}
+
+[data-theme='dark'] .apexcharts-gridline {
+    @apply !stroke-gray-700;
+}
+
+/* 存储卷管理样式 */
+.storage-usage-bar {
+    @apply h-2 bg-gray-200 rounded-full overflow-hidden;
+}
+
+.storage-usage-fill {
+    @apply h-full rounded-full transition-all duration-300;
+}
+
+.storage-usage-low {
+    @apply bg-success;
+}
+
+.storage-usage-medium {
+    @apply bg-warning;
+}
+
+.storage-usage-high {
+    @apply bg-error;
+}
+
+.volume-badge {
+    @apply badge text-xs font-medium mr-1;
+}
+
+.volume-encrypted {
+    @apply badge-primary;
+}
+
+.volume-backup {
+    @apply badge-secondary;
+}

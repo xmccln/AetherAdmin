@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云主机管理系统</title>
+    <!-- Tailwind CSS 和 DaisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 图标 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- TailAdmin CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.35.5/dist/apexcharts.css">
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-base-200">
+    <div class="drawer lg:drawer-open">
+        <input id="drawer-toggle" type="checkbox" class="drawer-toggle" />
+        
+        <div class="drawer-content flex flex-col">
+            <!-- 顶部导航栏 -->
+            <div class="navbar bg-base-100 shadow-md rounded-box mb-4">
+                <div class="navbar-start">
+                    <label for="drawer-toggle" class="btn btn-square btn-ghost lg:hidden">
+                        <i class="bi bi-list text-xl"></i>
+                    </label>
+                </div>
+                <div class="navbar-center lg:hidden">
+                    <h2 class="text-lg font-bold">云主机管理系统</h2>
+                </div>
+                <div class="navbar-end">
+                    <div class="dropdown dropdown-end">
+                        <label tabindex="0" class="btn btn-ghost btn-circle">
+                            <div class="indicator">
+                                <i class="bi bi-bell text-lg"></i>
+                                <span class="badge badge-xs badge-primary indicator-item">3</span>
+                            </div>
+                        </label>
+                        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                            <li><a>服务器CPU告警</a></li>
+                            <li><a>存储空间不足</a></li>
+                            <li><a>系统更新可用</a></li>
+                        </ul>
+                    </div>
+                    <div class="dropdown dropdown-end ml-2">
+                        <label tabindex="0" class="btn btn-ghost btn-circle avatar">
+                            <div class="w-10 rounded-full">
+                                <img src="https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff" alt="用户头像" />
+                            </div>
+                        </label>
+                        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                            <li><a>个人资料</a></li>
+                            <li><a>设置</a></li>
+                            <li><a>退出</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 主要内容区域 -->
+            <div class="p-4">
+                <!-- 仪表盘区域 -->
+                <div class="dashboard-section section-active" id="dashboard-section">
+                    <h2 class="text-2xl font-bold mb-6">仪表盘</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <!-- 统计卡片 -->
+                        <div class="stat bg-base-100 shadow-md rounded-box">
+                            <div class="stat-figure text-primary">
+                                <i class="bi bi-hdd-rack text-3xl"></i>
+                            </div>
+                            <div class="stat-title">活跃实例</div>
+                            <div class="stat-value text-primary">25</div>
+                            <div class="stat-desc"><i class="bi bi-arrow-up-circle"></i> 增长 14% (30天)</div>
+                        </div>
+                        
+                        <div class="stat bg-base-100 shadow-md rounded-box">
+                            <div class="stat-figure text-secondary">
+                                <i class="bi bi-cpu text-3xl"></i>
+                            </div>
+                            <div class="stat-title">CPU 使用率</div>
+                            <div class="stat-value text-secondary">68%</div>
+                            <div class="stat-desc"><i class="bi bi-arrow-up-circle"></i> 增长 7% (30天)</div>
+                        </div>
+                        
+                        <div class="stat bg-base-100 shadow-md rounded-box">
+                            <div class="stat-figure text-accent">
+                                <i class="bi bi-memory text-3xl"></i>
+                            </div>
+                            <div class="stat-title">内存使用率</div>
+                            <div class="stat-value text-accent">52%</div>
+                            <div class="stat-desc"><i class="bi bi-arrow-down-circle"></i> 减少 3% (30天)</div>
+                        </div>
+                        
+                        <div class="stat bg-base-100 shadow-md rounded-box">
+                            <div class="stat-figure text-info">
+                                <i class="bi bi-device-hdd text-3xl"></i>
+                            </div>
+                            <div class="stat-title">存储用量</div>
+                            <div class="stat-value text-info">75%</div>
+                            <div class="stat-desc"><i class="bi bi-arrow-up-circle"></i> 增长 12% (30天)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 card bg-base-100 shadow-md">
+                            <div class="card-body">
+                                <h3 class="text-lg font-bold mb-4">资源使用趋势</h3>
+                                <div id="resourceChart" class="w-full h-80"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="card bg-base-100 shadow-md">
+                            <div class="card-body">
+                                <h3 class="text-lg font-bold mb-4">实例类型分布</h3>
+                                <div id="instanceTypePieChart" class="w-full h-72"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 实例管理区域 -->
+                <div class="instances-section section-hidden" id="instances-section">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold">实例管理</h2>
+                        <button class="btn btn-primary" onclick="document.getElementById('create-instance-modal').showModal()">
+                            <i class="bi bi-plus-circle mr-2"></i> 创建实例
+                        </button>
+                    </div>
+
+                    <div class="card bg-base-100 shadow-md">
+                        <div class="card-body overflow-x-auto">
+                            <table class="table table-zebra">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>实例名称</th>
+                                        <th>操作系统</th>
+                                        <th>配置</th>
+                                        <th>状态</th>
+                                        <th>IP地址</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="instanceTableBody">
+                                    <!-- 实例数据会通过JavaScript加载 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 存储管理区域 -->
+                <div class="storage-section section-hidden" id="storage-section">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold">存储管理</h2>
+                        <button class="btn btn-primary" onclick="document.getElementById('create-volume-modal').showModal()">
+                            <i class="bi bi-plus-circle mr-2"></i>创建存储卷
+                        </button>
+                    </div>
+                    
+                    <!-- 存储概览卡片 -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="stat bg-base-100 shadow-md rounded-box">
+                            <div class="stat-figure text-primary">
+                                <i class="bi bi-hdd-stack text-3xl"></i>
+                            </div>
+                            <div class="stat-title">总存储空间</div>
+                            <div class="stat-value text-primary">4.2 TB</div>
+                            <div class="stat-desc">共计 15 个存储卷</div>
+                        </div>
+                        
+                        <div class="stat bg-base-100 shadow-md rounded-box">
+                            <div class="stat-figure text-secondary">
+                                <i class="bi bi-hdd text-3xl"></i>
+                            </div>
+                            <div class="stat-title">已用存储</div>
+                            <div class="stat-value text-secondary">2.8 TB</div>
+                            <div class="stat-desc">使用率 66.7%</div>
+                        </div>
+                        
+                        <div class="stat bg-base-100 shadow-md rounded-box">
+                            <div class="stat-figure text-accent">
+                                <i class="bi bi-hdd-network text-3xl"></i>
+                            </div>
+                            <div class="stat-title">已挂载卷</div>
+                            <div class="stat-value text-accent">12</div>
+                            <div class="stat-desc">3 个卷未挂载</div>
+                        </div>
+                    </div>
+
+                    <!-- 存储卷列表 -->
+                    <div class="card bg-base-100 shadow-md mb-6">
+                        <div class="card-body">
+                            <h3 class="text-lg font-bold mb-4">存储卷列表</h3>
+                            <div class="overflow-x-auto">
+                                <table class="table table-zebra w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>卷ID</th>
+                                            <th>名称</th>
+                                            <th>类型</th>
+                                            <th>容量</th>
+                                            <th>使用率</th>
+                                            <th>状态</th>
+                                            <th>挂载点</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="volume-table-body">
+                                        <!-- 将通过JS动态填充 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 存储性能监控 -->
+                    <div class="card bg-base-100 shadow-md">
+                        <div class="card-body">
+                            <h3 class="text-lg font-bold mb-4">存储性能监控</h3>
+                            <div id="storagePerformanceChart" class="w-full h-80"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 网络配置区域 -->
+                <div class="network-section section-hidden" id="network-section">
+                    <h2 class="text-2xl font-bold mb-6">网络配置</h2>
+                    <div class="alert alert-info shadow-lg">
+                        <div>
+                            <i class="bi bi-info-circle"></i>
+                            <span>网络配置功能正在开发中...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 监控统计区域 -->
+                <div class="monitor-section section-hidden" id="monitor-section">
+                    <h2 class="text-2xl font-bold mb-6">监控统计</h2>
+                    <div class="alert alert-info shadow-lg">
+                        <div>
+                            <i class="bi bi-info-circle"></i>
+                            <span>监控统计功能正在开发中...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 系统设置区域 -->
+                <div class="settings-section section-hidden" id="settings-section">
+                    <h2 class="text-2xl font-bold mb-6">系统设置</h2>
+                    <div class="alert alert-info shadow-lg">
+                        <div>
+                            <i class="bi bi-info-circle"></i>
+                            <span>系统设置功能正在开发中...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 侧边栏 -->
+        <div class="drawer-side">
+            <label for="drawer-toggle" class="drawer-overlay"></label>
+            <div class="menu p-4 w-64 h-full bg-base-100 text-base-content">
+                <div class="flex items-center justify-center py-4 mb-6">
+                    <h2 class="text-xl font-bold text-primary">云主机管理系统</h2>
+                </div>
+                <ul>
+                    <li>
+                        <a href="#dashboard" class="nav-link active">
+                            <i class="bi bi-speedometer2"></i> 仪表盘
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#instances" class="nav-link">
+                            <i class="bi bi-hdd-rack"></i> 实例管理
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#storage" class="nav-link">
+                            <i class="bi bi-device-hdd"></i> 存储管理
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#network" class="nav-link">
+                            <i class="bi bi-diagram-3"></i> 网络配置
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#monitor" class="nav-link">
+                            <i class="bi bi-graph-up"></i> 监控统计
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#settings" class="nav-link">
+                            <i class="bi bi-gear"></i> 系统设置
+                        </a>
+                    </li>
+                </ul>
+                <div class="mt-auto">
+                    <div class="flex items-center mt-10">
+                        <label class="swap swap-rotate">
+                            <input type="checkbox" id="theme-toggle" />
+                            <i class="bi bi-sun-fill swap-on text-xl"></i>
+                            <i class="bi bi-moon-fill swap-off text-xl"></i>
+                        </label>
+                        <span class="ml-2">切换主题</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 创建实例模态框 -->
+    <dialog id="create-instance-modal" class="modal">
+        <form method="dialog" class="modal-box">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            <h3 class="font-bold text-lg mb-4">创建新实例</h3>
+            <div class="form-control w-full mb-4">
+                <label class="label">
+                    <span class="label-text">实例名称</span>
+                </label>
+                <input type="text" id="instanceName" placeholder="输入实例名称" class="input input-bordered w-full" />
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="form-control w-full">
+                    <label class="label">
+                        <span class="label-text">操作系统</span>
+                    </label>
+                    <select class="select select-bordered" id="imageSelect">
+                        <!-- 将通过JS填充 -->
+                    </select>
+                </div>
+                <div class="form-control w-full">
+                    <label class="label">
+                        <span class="label-text">实例类型</span>
+                    </label>
+                    <select class="select select-bordered" id="instanceType">
+                        <!-- 将通过JS填充 -->
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="form-control w-full">
+                    <label class="label">
+                        <span class="label-text">存储空间 (GB)</span>
+                    </label>
+                    <input type="number" id="diskSize" min="20" value="40" class="input input-bordered w-full" />
+                </div>
+                <div class="form-control w-full">
+                    <label class="label">
+                        <span class="label-text">网络配置</span>
+                    </label>
+                    <select class="select select-bordered" id="networkSelect">
+                        <!-- 将通过JS填充 -->
+                    </select>
+                </div>
+            </div>
+            <div class="form-control w-full mb-4">
+                <label class="label">
+                    <span class="label-text">安全设置</span>
+                </label>
+                <div class="flex flex-col gap-2">
+                    <label class="cursor-pointer label justify-start">
+                        <input type="checkbox" id="enableFirewall" checked class="checkbox checkbox-primary mr-2" />
+                        <span class="label-text">启用防火墙</span>
+                    </label>
+                    <label class="cursor-pointer label justify-start">
+                        <input type="checkbox" id="enableBackup" class="checkbox checkbox-primary mr-2" />
+                        <span class="label-text">启用自动备份</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-action">
+                <button class="btn btn-outline">取消</button>
+                <button class="btn btn-primary" id="createInstanceBtn">创建实例</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- 创建存储卷模态框 -->
+    <dialog id="create-volume-modal" class="modal">
+        <form method="dialog" class="modal-box">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            <h3 class="font-bold text-lg mb-4">创建新存储卷</h3>
+            <div class="form-control w-full mb-4">
+                <label class="label">
+                    <span class="label-text">卷名称</span>
+                </label>
+                <input type="text" id="volumeName" placeholder="输入存储卷名称" class="input input-bordered w-full" />
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="form-control w-full">
+                    <label class="label">
+                        <span class="label-text">存储类型</span>
+                    </label>
+                    <select class="select select-bordered" id="volumeType">
+                        <option value="gp3">通用型SSD (gp3)</option>
+                        <option value="io2">高性能SSD (io2)</option>
+                        <option value="st1">吞吐优化型 (st1)</option>
+                        <option value="sc1">冷存储 (sc1)</option>
+                    </select>
+                </div>
+                <div class="form-control w-full">
+                    <label class="label">
+                        <span class="label-text">容量 (GB)</span>
+                    </label>
+                    <input type="number" id="volumeSize" min="10" value="100" class="input input-bordered w-full" />
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="form-control w-full">
+                    <label class="label">
+                        <span class="label-text">可用区</span>
+                    </label>
+                    <select class="select select-bordered" id="volumeZone">
+                        <option value="az-a">可用区 A</option>
+                        <option value="az-b">可用区 B</option>
+                        <option value="az-c">可用区 C</option>
+                    </select>
+                </div>
+                <div class="form-control w-full">
+                    <label class="label">
+                        <span class="label-text">IOPS</span>
+                    </label>
+                    <input type="number" id="volumeIops" min="100" value="3000" class="input input-bordered w-full" />
+                </div>
+            </div>
+            <div class="form-control w-full mb-4">
+                <label class="label">
+                    <span class="label-text">高级选项</span>
+                </label>
+                <div class="flex flex-col gap-2">
+                    <label class="cursor-pointer label justify-start">
+                        <input type="checkbox" id="enableEncryption" class="checkbox checkbox-primary mr-2" />
+                        <span class="label-text">启用加密</span>
+                    </label>
+                    <label class="cursor-pointer label justify-start">
+                        <input type="checkbox" id="enableBackup" checked class="checkbox checkbox-primary mr-2" />
+                        <span class="label-text">自动备份</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-action">
+                <button class="btn btn-outline">取消</button>
+                <button class="btn btn-primary" id="createVolumeBtn">创建存储卷</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- 挂载存储卷模态框 -->
+    <dialog id="mount-volume-modal" class="modal">
+        <form method="dialog" class="modal-box">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            <h3 class="font-bold text-lg mb-4">挂载存储卷</h3>
+            <div class="form-control w-full mb-4">
+                <label class="label">
+                    <span class="label-text">选择实例</span>
+                </label>
+                <select class="select select-bordered" id="mountInstanceSelect">
+                    <!-- 将通过JS填充 -->
+                </select>
+            </div>
+            <div class="form-control w-full mb-4">
+                <label class="label">
+                    <span class="label-text">设备名称</span>
+                </label>
+                <input type="text" id="deviceName" placeholder="/dev/xvdf" value="/dev/xvdf" class="input input-bordered w-full" />
+            </div>
+            <input type="hidden" id="mountVolumeId" />
+            <div class="modal-action">
+                <button class="btn btn-outline">取消</button>
+                <button class="btn btn-primary" id="mountVolumeBtn">挂载</button>
+            </div>
+        </form>
+    </dialog>
+
+    <div id="toast-container" class="toast toast-end"></div>
+
+    <!-- TailAdmin Charts Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.5/dist/apexcharts.min.js"></script>
+    <script src="js/mock-data.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
