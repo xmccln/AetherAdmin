@@ -128,24 +128,56 @@
                         </button>
                     </div>
 
-                    <div class="card bg-base-100 shadow-md">
-                        <div class="card-body overflow-x-auto">
-                            <table class="table table-zebra">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>实例名称</th>
-                                        <th>操作系统</th>
-                                        <th>配置</th>
-                                        <th>状态</th>
-                                        <th>IP地址</th>
-                                        <th>操作</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="instanceTableBody">
-                                    <!-- 实例数据会通过JavaScript加载 -->
-                                </tbody>
-                            </table>
+                    <!-- 搜索和过滤栏 -->
+                    <div class="card bg-base-100 shadow-md mb-4">
+                        <div class="card-body p-4">
+                            <div class="flex flex-col md:flex-row gap-2">
+                                <div class="form-control flex-1">
+                                    <div class="input-group">
+                                        <input type="text" placeholder="搜索实例..." class="input input-bordered w-full" />
+                                        <button class="btn btn-square">
+                                            <i class="bi bi-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <select class="select select-bordered">
+                                    <option value="">所有状态</option>
+                                    <option value="running">运行中</option>
+                                    <option value="stopped">已停止</option>
+                                    <option value="error">错误</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 实例卡片视图 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="instanceCardContainer">
+                        <!-- 实例卡片将通过JavaScript动态生成 -->
+                    </div>
+
+                    <!-- 仅在大屏幕显示的表格视图 -->
+                    <div class="hidden xl:block mt-6">
+                        <div class="card bg-base-100 shadow-md">
+                            <div class="card-body">
+                                <h3 class="card-title text-lg mb-4">实例列表视图</h3>
+                                
+                                <!-- 统计卡片式实例列表 -->
+                                <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4" id="instanceStatsCards">
+                                    <!-- 实例卡片将通过JavaScript动态生成 -->
+                                </div>
+                                
+                                <!-- 分页控制 -->
+                                <div class="flex justify-between items-center mt-4">
+                                    <div class="text-sm text-gray-500">显示 1-12 共 25 个实例</div>
+                                    <div class="join">
+                                        <button class="join-item btn btn-sm">«</button>
+                                        <button class="join-item btn btn-sm btn-active">1</button>
+                                        <button class="join-item btn btn-sm">2</button>
+                                        <button class="join-item btn btn-sm">3</button>
+                                        <button class="join-item btn btn-sm">»</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -226,14 +258,60 @@
                 
                 <!-- 网络配置区域 -->
                 <div class="network-section section-hidden" id="network-section">
-                    <h2 class="text-2xl font-bold mb-6">网络配置</h2>
-                    <div class="alert alert-info shadow-lg">
-                        <div>
-                            <i class="bi bi-info-circle"></i>
-                            <span>网络配置功能正在开发中...</span>
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold">网络配置</h2>
+                        <button class="btn btn-primary" onclick="document.getElementById('create-network-modal').showModal()">
+                            <i class="bi bi-plus-circle mr-2"></i> 创建网络
+                        </button>
+                    </div>
+                    
+                    <!-- 网络列表 -->
+                    <div class="card bg-base-100 shadow-md mb-6">
+                        <div class="card-body">
+                            <h3 class="text-lg font-bold mb-4">网络列表</h3>
+                            <div class="overflow-x-auto">
+                                <table class="table table-zebra w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>网络ID</th>
+                                            <th>名称</th>
+                                            <th>子网</th>
+                                            <th>状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="network-table-body">
+                                        <!-- 将通过JS动态填充 -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- 创建网络模态框 -->
+                <dialog id="create-network-modal" class="modal">
+                    <form method="dialog" class="modal-box">
+                        <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                        <h3 class="font-bold text-lg mb-4">创建新网络</h3>
+                        <div class="form-control w-full mb-4">
+                            <label class="label">
+                                <span class="label-text">网络名称</span>
+                            </label>
+                            <input type="text" id="networkName" placeholder="输入网络名称" class="input input-bordered w-full" />
+                        </div>
+                        <div class="form-control w-full mb-4">
+                            <label class="label">
+                                <span class="label-text">子网</span>
+                            </label>
+                            <input type="text" id="subnet" placeholder="输入子网 (如: 192.168.1.0/24)" class="input input-bordered w-full" />
+                        </div>
+                        <div class="modal-action">
+                            <button class="btn btn-outline">取消</button>
+                            <button class="btn btn-primary" id="createNetworkBtn">创建网络</button>
+                        </div>
+                    </form>
+                </dialog>
                 
                 <!-- 监控统计区域 -->
                 <div class="monitor-section section-hidden" id="monitor-section">

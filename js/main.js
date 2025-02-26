@@ -19,6 +19,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 初始化存储管理
     initStorageManagement();
+    
+    // 初始化网络配置
+    initNetworkManagement();
 });
 
 // 导航菜单初始化
@@ -45,6 +48,12 @@ function initializeNavigation() {
             const targetId = this.getAttribute('href').substring(1);
             document.getElementById(`${targetId}-section`).classList.add('section-active');
             document.getElementById(`${targetId}-section`).classList.remove('section-hidden');
+            
+            // 如果是实例区域，加载实例卡片
+            if (targetId === 'instances') {
+                renderInstanceCards();
+                loadInstanceStatsCards();
+            }
         });
     });
 }
@@ -193,77 +202,162 @@ function initCharts() {
 
 // 加载实例数据
 function loadInstanceData() {
-    const tableBody = document.querySelector('#instances-section table');
+    // 加载统计式卡片实例列表
+    renderInstanceCards();
+}
+
+// 加载统计卡片式实例列表
+function loadInstanceStatsCards() {
+    const cardsContainer = document.getElementById('instanceStatsCards');
+    if (!cardsContainer) return;
     
-    // 表头
-    tableBody.innerHTML = `
-        <thead>
-            <tr>
-                <th>实例名称</th>
-                <th>状态</th>
-                <th>镜像</th>
-                <th>类型</th>
-                <th>IP地址</th>
-                <th>创建时间</th>
-                <th>操作</th>
-            </tr>
-        </thead>
-        <tbody id="instancesTableBody">
-        </tbody>
-    `;
+    // 清空容器
+    cardsContainer.innerHTML = '';
     
-    const instancesTableBody = document.getElementById('instancesTableBody');
-    
-    // 添加实例数据行
+    // 添加实例数据卡片
     mockData.instances.forEach(instance => {
-        const row = document.createElement('tr');
+        // 设置状态样式类和图标
+        let statusClass = getStatusClass(instance.status);
+        let statusText = getStatusText(instance.status);
+        let iconClass = getStatusIconClass(instance.status);
         
+        // 创建卡片元素
+        const card = document.createElement('div');
+        card.className = 'stat bg-base-100 shadow-md rounded-box instance-stat-card';
+        
+        // 创建卡片内容
+        card.innerHTML = `
+            <div class="dropdown dropdown-left absolute top-2 right-2">
+                <label tabindex="0" class="btn btn-xs btn-ghost btn-circle">
+                    <i class="bi bi-three-dots-vertical"></i>
+                </label>
+                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-40">
+                    <li><a onclick="showInstanceDetails('${instance.id}')"><i class="bi bi-info-circle mr-2"></i>详情</a></li>
+                    ${instance.status === 'running' ? 
+                        `<li><a onclick="manageInstance('${instance.id}', 'stop')"><i class="bi bi-stop-circle mr-2"></i>停止</a></li>` :
+                        `<li><a onclick="manageInstance('${instance.id}', 'start')"><i class="bi bi-play-circle mr-2"></i>启动</a></li>`
+                    }
+                    <li><a onclick="manageInstance('${instance.id}', 'restart')"><i class="bi bi-arrow-clockwise mr-2"></i>重启</a></li>
+                    <li><a onclick="manageInstance('${instance.id}', 'delete')" class="text-error"><i class="bi bi-trash mr-2"></i>删除</a></li>
+                </ul>
+            </div>
+            <div class="stat-figure ${statusClass}">
+                <i class="bi ${iconClass} text-3xl"></i>
+            </div>
+            <div class="stat-title font-medium truncate" title="${instance.name}">${instance.name}</div>
+            <div class="stat-value text-sm">${instance.ip}</div>
+            <div class="stat-desc flex items-center mt-1">
+                <span class="badge ${statusClass} badge-sm">${statusText}</span>
+                <span class="ml-2 text-xs truncate">${instance.image}</span>
+            </div>
+            <div class="stat-actions mt-2 pt-2 border-t border-base-200">
+                ${instance.status === 'running' ?
+                    `<button class="btn btn-xs btn-primary" onclick="connectInstance('${instance.id}')">
+                        <i class="bi bi-terminal"></i> 连接
+                    </button>` :
+                    `<button class="btn btn-xs btn-success" onclick="startInstance('${instance.id}')">
+                        <i class="bi bi-play-fill"></i> 启动
+                    </button>`
+                }
+                <button class="btn btn-xs" onclick="showInstanceDetails('${instance.id}')">
+                    <i class="bi bi-eye"></i> 详情
+                </button>
+            </div>
+        `;
+        
+        cardsContainer.appendChild(card);
+    });
+}
+
+// 获取状态对应的图标类
+function getStatusIconClass(status) {
+    switch(status) {
+        case 'running': return 'bi-hdd-rack-fill';
+        case 'stopped': return 'bi-stop-circle';
+        case 'error': return 'bi-exclamation-triangle';
+        default: return 'bi-question-circle';
+    }
+}
+
+// 加载卡片式实例列表
+function loadInstanceCards() {
+    const cardsContainer = document.getElementById('instanceTableCards');
+    if (!cardsContainer) return;
+    
+    // 清空容器
+    cardsContainer.innerHTML = '';
+    
+    // 添加实例数据卡片
+    mockData.instances.forEach(instance => {
         // 格式化日期
         const createdDate = new Date(instance.createdAt);
         const formattedDate = `${createdDate.toLocaleDateString()} ${createdDate.toLocaleTimeString()}`;
         
         // 设置状态样式类
-        let statusClass = '';
-        switch (instance.status) {
-            case 'running':
-                statusClass = 'status-running';
-                break;
-            case 'stopped':
-                statusClass = 'status-stopped';
-                break;
-            case 'error':
-                statusClass = 'status-error';
-                break;
-            default:
-                statusClass = '';
-        }
+        let statusClass = getStatusClass(instance.status);
+        let statusText = getStatusText(instance.status);
         
-        // 行内容
-        row.innerHTML = `
-            <td>${instance.name}</td>
-            <td><span class="status-badge ${statusClass}">${instance.status}</span></td>
-            <td>${instance.image}</td>
-            <td>${instance.type}</td>
-            <td>${instance.ip}</td>
-            <td>${formattedDate}</td>
-            <td>
-                <div class="dropdown dropdown-end">
-                    <label tabindex="0" class="btn btn-xs btn-ghost">
-                        <i class="bi bi-three-dots-vertical"></i>
-                    </label>
-                    <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                        ${instance.status === 'running' ? 
-                            '<li><a onclick="manageInstance(\'' + instance.id + '\', \'stop\')"><i class="bi bi-stop-circle mr-2"></i>停止</a></li>' : 
-                            '<li><a onclick="manageInstance(\'' + instance.id + '\', \'start\')"><i class="bi bi-play-circle mr-2"></i>启动</a></li>'
-                        }
-                        <li><a onclick="manageInstance('${instance.id}', 'restart')"><i class="bi bi-arrow-clockwise mr-2"></i>重启</a></li>
-                        <li><a onclick="manageInstance('${instance.id}', 'delete')"><i class="bi bi-trash mr-2"></i>删除</a></li>
-                    </ul>
+        // 创建卡片元素
+        const card = document.createElement('div');
+        card.className = 'card bg-base-100 shadow-sm hover:shadow-md transition-shadow instance-card border border-base-300';
+        card.innerHTML = `
+            <div class="card-body p-4">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <h3 class="card-title text-base font-bold mb-1">${instance.name}</h3>
+                        <div class="text-xs text-gray-500 mb-2">${instance.id}</div>
+                    </div>
+                    <div class="badge ${statusClass} gap-1">
+                        <div class="w-2 h-2 rounded-full bg-current"></div>
+                        ${statusText}
+                    </div>
                 </div>
-            </td>
+                
+                <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-sm mb-3">
+                    <div class="flex items-center">
+                        <i class="bi bi-hdd mr-1 text-gray-400"></i>
+                        <span class="truncate">${instance.image}</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="bi bi-cpu mr-1 text-gray-400"></i>
+                        <span>${instance.type}</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="bi bi-globe mr-1 text-gray-400"></i>
+                        <span>${instance.ip}</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="bi bi-calendar3 mr-1 text-gray-400"></i>
+                        <span class="truncate">${formattedDate}</span>
+                    </div>
+                </div>
+                
+                <div class="card-actions justify-end border-t border-base-200 pt-2">
+                    ${instance.status === 'running' ? 
+                        `<button class="btn btn-xs btn-outline" onclick="manageInstance('${instance.id}', 'stop')">
+                            <i class="bi bi-stop-circle mr-1"></i>停止
+                        </button>` : 
+                        `<button class="btn btn-xs btn-outline btn-success" onclick="manageInstance('${instance.id}', 'start')">
+                            <i class="bi bi-play-circle mr-1"></i>启动
+                        </button>`
+                    }
+                    <button class="btn btn-xs btn-outline" onclick="manageInstance('${instance.id}', 'restart')">
+                        <i class="bi bi-arrow-clockwise mr-1"></i>重启
+                    </button>
+                    <div class="dropdown dropdown-end">
+                        <button tabindex="0" class="btn btn-xs btn-ghost btn-square">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-40">
+                            <li><a onclick="showInstanceDetails('${instance.id}')"><i class="bi bi-info-circle mr-2"></i>详情</a></li>
+                            <li><a onclick="manageInstance('${instance.id}', 'delete')" class="text-error"><i class="bi bi-trash mr-2"></i>删除</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         `;
         
-        instancesTableBody.appendChild(row);
+        cardsContainer.appendChild(card);
     });
 }
 
@@ -798,5 +892,290 @@ function deleteVolume(volumeId) {
         }, 1500);
     } else {
         showToast('找不到指定的存储卷', 'alert-error');
+    }
+}
+
+// 渲染实例卡片视图
+function renderInstanceCards() {
+    const cardContainer = document.getElementById('instanceCardContainer');
+    if (!cardContainer) return;
+    
+    cardContainer.innerHTML = '';
+    
+    mockData.instances.forEach(instance => {
+        const statusClass = getStatusClass(instance.status);
+        const statusText = getStatusText(instance.status);
+        const iconClass = getStatusIconClass(instance.status);
+        
+        const card = document.createElement('div');
+        card.className = 'stat bg-base-100 shadow-md rounded-box instance-stat-card';
+        card.innerHTML = `
+            <div class="dropdown dropdown-left absolute top-2 right-2">
+                <label tabindex="0" class="btn btn-xs btn-ghost btn-circle">
+                    <i class="bi bi-three-dots-vertical"></i>
+                </label>
+                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-40">
+                    <li><a onclick="showInstanceDetails('${instance.id}')"><i class="bi bi-info-circle mr-2"></i>详情</a></li>
+                    ${instance.status === 'running' ? 
+                        `<li><a onclick="manageInstance('${instance.id}', 'stop')"><i class="bi bi-stop-circle mr-2"></i>停止</a></li>` :
+                        `<li><a onclick="manageInstance('${instance.id}', 'start')"><i class="bi bi-play-circle mr-2"></i>启动</a></li>`
+                    }
+                    <li><a onclick="manageInstance('${instance.id}', 'restart')"><i class="bi bi-arrow-clockwise mr-2"></i>重启</a></li>
+                    <li><a onclick="manageInstance('${instance.id}', 'delete')" class="text-error"><i class="bi bi-trash mr-2"></i>删除</a></li>
+                </ul>
+            </div>
+            <div class="stat-figure ${statusClass}">
+                <i class="bi ${iconClass} text-3xl"></i>
+            </div>
+            <div class="stat-title font-medium truncate" title="${instance.name}">${instance.name}</div>
+            <div class="stat-value text-sm">${instance.ip}</div>
+            <div class="stat-desc flex items-center mt-1">
+                <span class="badge ${statusClass} badge-sm">${statusText}</span>
+                <span class="ml-2 text-xs truncate">${instance.image}</span>
+            </div>
+            <div class="stat-actions mt-2 pt-2 border-t border-base-200">
+                ${instance.status === 'running' ?
+                    `<button class="btn btn-xs btn-primary" onclick="connectInstance('${instance.id}')">
+                        <i class="bi bi-terminal"></i> 连接
+                    </button>` :
+                    `<button class="btn btn-xs btn-success" onclick="startInstance('${instance.id}')">
+                        <i class="bi bi-play-fill"></i> 启动
+                    </button>`
+                }
+                <button class="btn btn-xs" onclick="showInstanceDetails('${instance.id}')">
+                    <i class="bi bi-eye"></i> 详情
+                </button>
+            </div>
+        `;
+        
+        cardContainer.appendChild(card);
+    });
+}
+
+// 修改现有函数，加载实例页面时同时渲染卡片和表格
+function loadInstancesPage() {
+    renderInstances(); // 假设这是现有的表格渲染函数
+    renderInstanceCards(); // 新增的卡片渲染函数
+}
+
+// 实例相关操作函数
+function showInstanceDetails(instanceId) {
+    showToast(`查看实例 ${instanceId} 的详细信息`, 'info');
+    // 实现实例详情查看逻辑
+}
+
+function connectInstance(instanceId) {
+    showToast(`正在连接到实例 ${instanceId}`, 'info');
+    // 实现实例连接逻辑
+}
+
+function startInstance(instanceId) {
+    showToast(`正在启动实例 ${instanceId}`, 'success');
+    // 实现实例启动逻辑
+}
+
+function stopInstance(instanceId) {
+    showToast(`正在停止实例 ${instanceId}`, 'warning');
+    // 实现实例停止逻辑
+}
+
+function restartInstance(instanceId) {
+    showToast(`正在重启实例 ${instanceId}`, 'info');
+    // 实现实例重启逻辑
+}
+
+function deleteInstance(instanceId) {
+    if (confirm(`确定要删除实例 ${instanceId} 吗？此操作不可逆。`)) {
+        showToast(`已删除实例 ${instanceId}`, 'error');
+        // 实现实例删除逻辑
+    }
+}
+
+// 初始化网络配置功能
+function initNetworkManagement() {
+    // 加载网络数据
+    loadNetworkData();
+    
+    // 挂载创建网络按钮事件
+    document.getElementById('createNetworkBtn').addEventListener('click', createNetwork);
+}
+
+// 加载网络数据
+function loadNetworkData() {
+    const tableBody = document.getElementById('network-table-body');
+    if (!tableBody) return;
+    
+    // 清空表格
+    tableBody.innerHTML = '';
+    
+    // 填充网络数据
+    networkData.forEach(network => {
+        const row = document.createElement('tr');
+        
+        // 设置状态样式
+        let statusClass = 'badge-ghost';
+        let statusText = '未知';
+        
+        if (network.status === 'active') {
+            statusClass = 'badge-success';
+            statusText = '活跃';
+        } else if (network.status === 'inactive') {
+            statusClass = 'badge-warning';
+            statusText = '非活跃';
+        } else if (network.status === 'error') {
+            statusClass = 'badge-error';
+            statusText = '错误';
+        }
+        
+        row.innerHTML = `
+            <td class="font-mono text-xs">${network.id}</td>
+            <td>${network.name}</td>
+            <td>${network.subnet}</td>
+            <td><span class="badge ${statusClass} status-badge">${statusText}</span></td>
+            <td>
+                <div class="flex gap-1">
+                    <button class="btn btn-xs btn-outline" onclick="editNetwork('${network.id}')">
+                        <i class="bi bi-pencil"></i> 编辑
+                    </button>
+                    <button class="btn btn-xs btn-error btn-outline" onclick="deleteNetwork('${network.id}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        
+        tableBody.appendChild(row);
+    });
+}
+
+// 创建网络
+function createNetwork() {
+    const networkName = document.getElementById('networkName').value.trim();
+    const subnet = document.getElementById('subnet').value.trim();
+    
+    // 验证输入
+    if (!networkName || !subnet) {
+        showToast('请填写所有必填字段', 'alert-error');
+        return;
+    }
+    
+    // 生成随机ID (模拟)
+    const id = 'net-' + Math.random().toString(36).substring(2, 12);
+    
+    // 创建新网络对象
+    const newNetwork = {
+        id,
+        name: networkName,
+        subnet,
+        status: 'active',
+        createdAt: new Date().toISOString()
+    };
+    
+    // 添加到数据中
+    networkData.push(newNetwork);
+    
+    // 刷新表格
+    loadNetworkData();
+    
+    // 关闭模态框
+    document.getElementById('create-network-modal').close();
+    
+    // 显示成功消息
+    showToast('网络创建成功！', 'alert-success');
+    
+    // 重置表单
+    document.querySelector('#create-network-modal form').reset();
+}
+
+// 删除网络
+function deleteNetwork(networkId) {
+    // 确认
+    if (!confirm('确定要删除此网络吗？此操作无法撤销！')) {
+        return;
+    }
+    
+    // 查找网络索引
+    const networkIndex = networkData.findIndex(net => net.id === networkId);
+    if (networkIndex !== -1) {
+        // 显示处理中消息
+        showToast('正在删除网络...', 'alert-warning');
+        
+        // 模拟删除过程 (1.5秒)
+        setTimeout(() => {
+            // 删除网络
+            networkData.splice(networkIndex, 1);
+            
+            // 刷新表格
+            loadNetworkData();
+            
+            // 显示成功消息
+            showToast('网络已删除！', 'alert-success');
+        }, 1500);
+    } else {
+        showToast('找不到指定的网络', 'alert-error');
+    }
+}
+
+// 编辑网络
+function editNetwork(networkId) {
+    // 查找网络
+    const network = networkData.find(net => net.id === networkId);
+    
+    if (!network) {
+        showToast('未找到指定网络', 'alert-error');
+        return;
+    }
+    
+    // 填充表单
+    document.getElementById('networkName').value = network.name;
+    document.getElementById('subnet').value = network.subnet;
+    
+    // 显示模态框
+    document.getElementById('create-network-modal').showModal();
+    
+    // 修改创建按钮事件为更新
+    const createBtn = document.getElementById('createNetworkBtn');
+    createBtn.textContent = '更新网络';
+    createBtn.onclick = function() {
+        updateNetwork(networkId);
+    };
+}
+
+// 更新网络
+function updateNetwork(networkId) {
+    const networkName = document.getElementById('networkName').value.trim();
+    const subnet = document.getElementById('subnet').value.trim();
+    
+    // 验证输入
+    if (!networkName || !subnet) {
+        showToast('请填写所有必填字段', 'alert-error');
+        return;
+    }
+    
+    // 查找网络索引
+    const networkIndex = networkData.findIndex(net => net.id === networkId);
+    if (networkIndex !== -1) {
+        // 更新网络数据
+        networkData[networkIndex].name = networkName;
+        networkData[networkIndex].subnet = subnet;
+        
+        // 刷新表格
+        loadNetworkData();
+        
+        // 关闭模态框
+        document.getElementById('create-network-modal').close();
+        
+        // 显示成功消息
+        showToast('网络更新成功！', 'alert-success');
+        
+        // 重置表单
+        document.querySelector('#create-network-modal form').reset();
+        
+        // 恢复创建按钮事件
+        const createBtn = document.getElementById('createNetworkBtn');
+        createBtn.textContent = '创建网络';
+        createBtn.onclick = createNetwork;
+    } else {
+        showToast('找不到指定的网络', 'alert-error');
     }
 }

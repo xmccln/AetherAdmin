@@ -129,3 +129,225 @@ body {
 .volume-backup {
     @apply badge-secondary;
 }
+
+/* 实例卡片样式优化 */
+#instanceCardContainer .card {
+    transition: all 0.2s ease;
+    height: 100%;
+}
+
+#instanceCardContainer .card:hover {
+    transform: translateY(-2px);
+}
+
+.instance-card {
+    min-width: 0; /* 确保卡片可以缩小 */
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.instance-card .card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.instance-info {
+    overflow: hidden;
+    flex-grow: 1;
+}
+
+/* 表格转卡片视图样式 */
+#instanceTableCards .card {
+    transition: all 0.2s ease;
+}
+
+#instanceTableCards .card:hover {
+    transform: translateY(-2px);
+}
+
+#instanceTableCards .card-body {
+    padding: 0.75rem 1rem;
+}
+
+#instanceTableCards .card-title {
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+}
+
+#instanceTableCards .badge {
+    margin-left: auto;
+}
+
+#instanceTableCards .card-actions {
+    margin-top: 0.5rem;
+}
+
+/* 状态徽章样式增强 */
+.badge .rounded-full {
+    display: inline-block;
+    margin-right: 4px;
+}
+
+/* 统计卡片式实例列表样式 */
+.instance-stat-card {
+    position: relative;
+    transition: all 0.2s ease;
+    overflow: visible;
+}
+
+.instance-stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.instance-stat-card .stat-title {
+    margin-right: 20px; /* 为更多按钮留出空间 */
+}
+
+.instance-stat-card .stat-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.instance-stat-card .dropdown {
+    opacity: 0.7;
+}
+
+.instance-stat-card:hover .dropdown {
+    opacity: 1;
+}
+
+.instance-stat-card .stat-figure {
+    opacity: 0.8;
+}
+
+/* 网络配置样式 */
+.network-section .table {
+    @apply table-zebra w-full;
+}
+
+.network-section .badge {
+    @apply badge text-xs font-medium;
+}
+
+/* 移动端适配优化 */
+@media (max-width: 640px) {
+    .card-body {
+        padding: 0.75rem;
+    }
+    
+    .card-title {
+        font-size: 0.9rem;
+        max-width: 60%;
+    }
+    
+    .badge {
+        font-size: 0.65rem;
+        height: 1.25rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .btn-xs {
+        height: 1.5rem;
+        min-height: 1.5rem;
+        font-size: 0.65rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    /* 强制卡片网格为单列 */
+    #instanceCardContainer {
+        grid-template-columns: repeat(1, 1fr) !important;
+    }
+    
+    /* 调整下拉菜单位置 */
+    .dropdown-top .dropdown-content {
+        bottom: 100%;
+        top: auto;
+        margin-bottom: 4px;
+    }
+    
+    /* 实例详情布局优化 */
+    .instance-info > div {
+        margin-bottom: 0.35rem;
+    }
+    
+    /* 确保IP和ID可以截断 */
+    .truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 768px) {
+    .card-body {
+        padding: 0.75rem;
+    }
+    
+    .card-title {
+        font-size: 0.9rem;
+        max-width: 60%;
+    }
+    
+    .badge {
+        font-size: 0.65rem;
+        height: 1.25rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .btn-xs {
+        height: 1.5rem;
+        min-height: 1.5rem;
+        font-size: 0.65rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    /* 强制卡片网格为单列 */
+    #instanceCardContainer {
+        grid-template-columns: repeat(1, 1fr) !important;
+    }
+    
+    /* 强制卡片整行显示 */
+    .instance-card {
+        grid-column: 1 / -1;
+    }
+    
+    /* 调整下拉菜单位置 */
+    .dropdown-top .dropdown-content {
+        bottom: 100%;
+        top: auto;
+        margin-bottom: 4px;
+    }
+    
+    /* 实例详情布局优化 */
+    .instance-info > div {
+        margin-bottom: 0.35rem;
+    }
+    
+    /* 确保IP和ID可以截断 */
+    .truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+/* 确保卡片高度一致且布局美观 */
+@media (min-width: 769px) {
+    .instance-card {
+        min-height: 240px;
+    }
+    
+    .instance-info {
+        margin-bottom: auto;
+    }
+    
+    .card-actions {
+        margin-top: auto;
+    }
+}
